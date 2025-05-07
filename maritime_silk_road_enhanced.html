@@ -1,0 +1,151 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Maritime Silk Road - Enhanced Map</title>
+  <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no" />
+  <script src="https://api.mapbox.com/mapbox-gl-js/v2.14.1/mapbox-gl.js"></script>
+  <link href="https://api.mapbox.com/mapbox-gl-js/v2.14.1/mapbox-gl.css" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
+  <script src="https://unpkg.com/deck.gl@8.8.19/dist.min.js"></script>
+  <style>
+    body { margin:0; padding:0; }
+    #map { position:absolute; top:0; bottom:0; width:100%; }
+    .mapboxgl-popup-content { width: 280px; height: 240px; }
+    #timeline {
+      position: absolute;
+      bottom: 15px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #111;
+      padding: 10px;
+      border-radius: 4px;
+      color: white;
+      z-index: 10;
+    }
+  </style>
+</head>
+<body>
+<div id="map"></div>
+<div id="timeline">
+  Year: <input type="range" id="yearSlider" min="2013" max="2023" value="2023" step="1" />
+  <span id="yearValue">2023</span>
+</div>
+<script>
+  mapboxgl.accessToken = 'pk.eyJ1Ijoic3drMjAwMCIsImEiOiJjbTdraXR4N3owMTZ4MmlzZG03dDIyaGJkIn0.IrX_wW0bMYbw0jOr5nIGGA';
+  const map = new mapboxgl.Map({
+    container: 'map',
+    style: 'mapbox://styles/mapbox/dark-v10',
+    center: [60, 20],
+    zoom: 2.2,
+    pitch: 0,
+    bearing: 0,
+    maxBounds: [[-180, -60], [180, 85]]
+  });
+
+  let portData;
+  let routeData;
+  let currentYear = "2023";
+
+  // Load data
+  async function loadData() {
+    const portsResp = await fetch('https://songwenkai2000.github.io/CASA0003/ports_cleaned.geojson');
+    const routesResp = await fetch('https://songwenkai2000.github.io/CASA0003/output_30_ports.geojson');
+    portData = await portsResp.json();
+    routeData = await routesResp.json();
+    map.once('load', () => {
+      renderLayers();
+    });
+  }
+
+  function renderLayers() {
+    map.addSource('ports', { type: 'geojson', data: portData });
+    map.addLayer({
+      id: 'ports',
+      type: 'circle',
+      source: 'ports',
+      paint: {
+        'circle-radius': [
+          'interpolate', ['linear'], ['get', 'TEU_' + currentYear],
+          1000000, 4,
+          5000000, 8,
+          20000000, 16
+        ],
+        'circle-color': '#FFA726',
+        'circle-opacity': 0.9,
+        'circle-stroke-color': '#fff',
+        'circle-stroke-width': 1
+      }
+    });
+
+    map.addSource('routes', { type: 'geojson', data: routeData });
+    map.addLayer({
+      id: 'routes',
+      type: 'line',
+      source: 'routes',
+      paint: {
+        'line-color': [
+          'interpolate', ['linear'], ['get', 'distKM'],
+          2000, '#29B6F6',
+          8000, '#0288D1',
+          15000, '#01579B'
+        ],
+        'line-width': 1.5,
+        'line-opacity': 0.6
+      }
+    });
+
+    let popup;
+    map.on('mouseenter', 'ports', (e) => {
+      map.getCanvas().style.cursor = 'pointer';
+      const props = e.features[0].properties;
+      const coords = e.features[0].geometry.coordinates;
+      const teu = props['TEU_' + currentYear];
+      const gdp = props['GDP_' + currentYear];
+      const html = `<div id="echart" style="width:260px;height:220px;"></div>`;
+      popup = new mapboxgl.Popup({ closeButton: true })
+        .setLngLat(coords)
+        .setHTML(html)
+        .addTo(map);
+      setTimeout(() => drawChart(props), 200);
+    });
+
+    map.on('mouseleave', 'ports', () => {
+      map.getCanvas().style.cursor = '';
+    });
+  }
+
+  function drawChart(props) {
+    const chart = echarts.init(document.getElementById('echart'));
+    const years = Array.from({ length: 11 }, (_, i) => 2013 + i);
+    const teu = years.map(y => parseInt(props['TEU_' + y] || 0));
+    const gdp = years.map(y => parseFloat(props['GDP_' + y] || 0));
+    chart.setOption({
+      title: { text: props["Port Name"], left: 'center', textStyle: { fontSize: 12 } },
+      tooltip: { trigger: 'axis' },
+      legend: { data: ['TEU', 'GDP'], bottom: 0 },
+      xAxis: { type: 'category', data: years },
+      yAxis: {},
+      series: [
+        { name: 'TEU', type: 'bar', data: teu },
+        { name: 'GDP', type: 'line', data: gdp }
+      ]
+    });
+  }
+
+  document.getElementById('yearSlider').addEventListener('input', (e) => {
+    currentYear = e.target.value;
+    document.getElementById('yearValue').innerText = currentYear;
+    map.setPaintProperty('ports', 'circle-radius', [
+      'interpolate', ['linear'], ['get', 'TEU_' + currentYear],
+      1000000, 4,
+      5000000, 8,
+      20000000, 16
+    ]);
+  });
+
+  loadData();
+</script>
+</body>
+</html>
