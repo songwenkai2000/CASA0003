@@ -1,0 +1,91 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Maritime Silk Road Animated Routes</title>
+  <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no" />
+  <script src="https://api.mapbox.com/mapbox-gl-js/v2.14.1/mapbox-gl.js"></script>
+  <link href="https://api.mapbox.com/mapbox-gl-js/v2.14.1/mapbox-gl.css" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/@turf/turf@6/turf.min.js"></script>
+  <style>
+    body { margin:0; padding:0; }
+    #map { position:absolute; top:0; bottom:0; width:100%; }
+    canvas.particle {
+      position: absolute;
+      pointer-events: none;
+      z-index: 100;
+    }
+  </style>
+</head>
+<body>
+<div id="map"></div>
+<canvas id="particleCanvas" class="particle"></canvas>
+<script>
+mapboxgl.accessToken = 'pk.eyJ1Ijoic3drMjAwMCIsImEiOiJjbTdraXR4N3owMTZ4MmlzZG03dDIyaGJkIn0.IrX_wW0bMYbw0jOr5nIGGA';
+const map = new mapboxgl.Map({
+  container: 'map',
+  style: 'mapbox://styles/mapbox/dark-v11',
+  center: [75, 20],
+  zoom: 2.5
+});
+
+const canvas = document.getElementById('particleCanvas');
+const ctx = canvas.getContext('2d');
+let particles = [];
+
+function resizeCanvas() {
+  canvas.width = map.getCanvas().width;
+  canvas.height = map.getCanvas().height;
+}
+map.on('resize', resizeCanvas);
+map.on('render', drawParticles);
+
+function drawParticles() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  particles.forEach(p => {
+    const screen = map.project(p.coord);
+    ctx.beginPath();
+    ctx.arc(screen.x, screen.y, 2.5, 0, Math.PI * 2);
+    ctx.fillStyle = 'rgba(0,150,255,0.7)';
+    ctx.fill();
+  });
+}
+
+function animateParticles(paths) {
+  particles = [];
+  paths.forEach(route => {
+    const line = turf.greatCircle(route[0], route[1], { npoints: 100 });
+    const steps = line.geometry.coordinates;
+    let i = 0;
+    particles.push({
+      coord: steps[0],
+      steps: steps,
+      index: i
+    });
+  });
+
+  function update() {
+    particles.forEach(p => {
+      p.index = (p.index + 1) % p.steps.length;
+      p.coord = p.steps[p.index];
+    });
+    map.triggerRepaint();
+    requestAnimationFrame(update);
+  }
+  update();
+}
+
+map.on('load', () => {
+  resizeCanvas();
+
+  fetch('https://songwenkai2000.github.io/CASA0003/output_30_ports.geojson')
+    .then(res => res.json())
+    .then(data => {
+      const paths = data.features.map(f => f.geometry.coordinates);
+      animateParticles(paths);
+    });
+});
+</script>
+</body>
+</html>
