@@ -1,0 +1,71 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Maritime Silk Road Ports - Enhanced Chart</title>
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5"></script>
+</head>
+<body>
+    <div id="popup-chart" style="width: 420px;height:320px;"></div>
+    <script>
+        var chartDom = document.getElementById('popup-chart');
+        var myChart = echarts.init(chartDom);
+        var option = {
+            title: {
+                text: 'Shanghai Port'
+            },
+            tooltip: {
+                trigger: 'axis'
+            },
+            legend: {
+                data: ['TEU', 'GDP', 'LSCI'],
+                bottom: 0
+            },
+            xAxis: {
+                type: 'category',
+                data: ['2013','2014','2015','2016','2017','2018','2019','2020','2021','2022','2023']
+            },
+            yAxis: [
+                {
+                    type: 'value',
+                    name: 'TEU',
+                    position: 'left'
+                },
+                {
+                    type: 'value',
+                    name: 'GDP (Billion $)',
+                    position: 'right'
+                },
+                {
+                    type: 'value',
+                    name: 'LSCI',
+                    position: 'right',
+                    offset: 60
+                }
+            ],
+            series: [
+                {
+                    name: 'TEU',
+                    type: 'bar',
+                    data: [33620000,35200000,36500000,37000000,40000000,42010000,43500000,43500000,47000000,47500000,49000000],
+                    yAxisIndex: 0
+                },
+                {
+                    name: 'GDP',
+                    type: 'line',
+                    data: [94900,104760,111380,112330,121430,138950,143430,147230,168620,177340,179680],
+                    yAxisIndex: 1
+                },
+                {
+                    name: 'LSCI',
+                    type: 'line',
+                    data: [145.4,148.7,150.2,152.1,155.2,160.1,161.4,160.8,161.7,162.1,162.3],
+                    yAxisIndex: 2
+                }
+            ]
+        };
+        myChart.setOption(option);
+    </script>
+</body>
+</html>
