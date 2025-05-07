@@ -1,0 +1,30 @@
+
+<!-- 此处省略其他 HTML 内容 -->
+
+<script>
+function drawChart(props) {
+  const chart = echarts.init(document.getElementById('echart'));
+  const years = Array.from({ length: 11 }, (_, i) => 2013 + i);
+  const teu = years.map(y => parseInt(props['TEU_' + y] || 0));
+  const gdp = years.map(y => parseFloat(props['GDP_' + y] || 0));
+  const lsci = years.map(y => parseFloat(props['LSCI_' + y] || 0));
+
+  chart.setOption({
+    grid: { left: 50, right: 60, top: 30, bottom: 30 },
+    title: { text: props["Port Name"] || "", left: 'center', textStyle: { fontSize: 12 } },
+    tooltip: { trigger: 'axis' },
+    legend: { data: ['TEU', 'GDP', 'LSCI'], bottom: 0 },
+    xAxis: { type: 'category', data: years },
+    yAxis: [
+      { type: 'value', name: 'TEU', position: 'left' },
+      { type: 'value', name: 'GDP (B $)', position: 'right', offset: 40 },
+      { type: 'value', name: 'LSCI', position: 'right' }
+    ],
+    series: [
+      { name: 'TEU', type: 'bar', data: teu, yAxisIndex: 0, itemStyle: { color: '#4F81BD' } },
+      { name: 'GDP', type: 'line', data: gdp, yAxisIndex: 1, lineStyle: { color: '#4CAF50' } },
+      { name: 'LSCI', type: 'line', data: lsci, yAxisIndex: 2, lineStyle: { color: '#FFA726' } }
+    ]
+  });
+}
+</script>
