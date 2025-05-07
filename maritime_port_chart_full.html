@@ -1,0 +1,103 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Maritime Port Statistics</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body {
+      background-color: #1a1a1a;
+      color: white;
+      font-family: Arial, sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+    canvas {
+      background-color: white;
+      padding: 20px;
+      border-radius: 10px;
+    }
+  </style>
+</head>
+<body>
+  <canvas id="portChart" width="900" height="500"></canvas>
+  <script>
+    const ctx = document.getElementById('portChart').getContext('2d');
+    const chart = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: ['2013','2014','2015','2016','2017','2018','2019','2020','2021','2022','2023'],
+        datasets: [
+          {
+            label: 'TEU',
+            data: [33620000, 35200000, 36500000, 37000000, 40000000, 42010000, 43500000, 43500000, 47000000, 47500000, 49000000],
+            backgroundColor: 'rgba(54, 162, 235, 0.6)',
+            yAxisID: 'y',
+          },
+          {
+            label: 'GDP (Billion $)',
+            data: [94900, 104760, 111380, 112330, 121430, 138950, 143430, 147230, 168620, 177340, 179680],
+            type: 'line',
+            borderColor: 'rgba(75, 192, 192, 1)',
+            yAxisID: 'y1',
+            tension: 0.3,
+            fill: false
+          },
+          {
+            label: 'LSCI',
+            data: [145.4, 148.7, 150.2, 152.1, 155.2, 160.1, 161.4, 160.8, 161.7, 162.1, 162.3],
+            type: 'line',
+            borderColor: 'rgba(255, 206, 86, 1)',
+            yAxisID: 'y2',
+            tension: 0.3,
+            fill: false
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          legend: {
+            labels: {
+              color: '#000'
+            }
+          }
+        },
+        scales: {
+          y: {
+            position: 'left',
+            title: {
+              display: true,
+              text: 'TEU (x10⁶)'
+            }
+          },
+          y1: {
+            position: 'right',
+            title: {
+              display: true,
+              text: 'GDP (Billion $)'
+            },
+            grid: {
+              drawOnChartArea: false
+            }
+          },
+          y2: {
+            position: 'right',
+            offset: true,
+            title: {
+              display: true,
+              text: 'LSCI'
+            },
+            grid: {
+              drawOnChartArea: false
+            }
+          }
+        }
+      }
+    });
+  </script>
+</body>
+</html>
