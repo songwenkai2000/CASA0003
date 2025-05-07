@@ -1,0 +1,148 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Maritime Silk Road with Fixed Flyline</title>
+  <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no" />
+  <script src="https://api.mapbox.com/mapbox-gl-js/v2.14.1/mapbox-gl.js"></script>
+  <link href="https://api.mapbox.com/mapbox-gl-js/v2.14.1/mapbox-gl.css" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/echarts@5"></script>
+  <script src="https://cdn.jsdelivr.net/npm/deck.gl@8.8.19/dist.min.js"></script>
+  <style>
+    body { margin:0; padding:0; }
+    #map { position:absolute; top:0; bottom:0; width:100%; }
+    #timeline {
+      position: absolute;
+      bottom: 15px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #111;
+      padding: 10px;
+      border-radius: 4px;
+      color: white;
+      z-index: 10;
+    }
+    .mapboxgl-popup-content { width: 280px; height: 220px; }
+  </style>
+</head>
+<body>
+<div id="map"></div>
+<div id="timeline">
+  年: <input type="range" id="yearSlider" min="2013" max="2023" value="2023" step="1" />
+  <span id="yearValue">2023</span>
+</div>
+<script>
+mapboxgl.accessToken = 'pk.eyJ1Ijoic3drMjAwMCIsImEiOiJjbTdraXR4N3owMTZ4MmlzZG03dDIyaGJkIn0.IrX_wW0bMYbw0jOr5nIGGA';
+const map = new mapboxgl.Map({
+  container: 'map',
+  style: 'mapbox://styles/mapbox/dark-v10',
+  center: [60, 20],
+  zoom: 2.2,
+  pitch: 0,
+  bearing: 0,
+  maxBounds: [[-180, -60], [180, 85]]
+});
+
+let currentYear = "2023";
+let popup;
+
+map.on('load', () => {
+  map.addSource('ports', {
+    type: 'geojson',
+    data: 'https://songwenkai2000.github.io/CASA0003/ports_cleaned.geojson'
+  });
+
+  map.addLayer({
+    id: 'ports',
+    type: 'circle',
+    source: 'ports',
+    paint: {
+      'circle-radius': [
+        'interpolate', ['linear'], ['get', 'TEU_' + currentYear],
+        1000000, 4,
+        5000000, 8,
+        20000000, 16
+      ],
+      'circle-color': '#FFA726',
+      'circle-opacity': 0.9,
+      'circle-stroke-color': '#fff',
+      'circle-stroke-width': 1
+    }
+  });
+
+  map.on('mouseenter', 'ports', (e) => {
+    map.getCanvas().style.cursor = 'pointer';
+    const props = e.features[0].properties;
+    const coords = e.features[0].geometry.coordinates;
+    const html = `<div id="echart" style="width:260px;height:220px;"></div>`;
+    popup = new mapboxgl.Popup({ closeButton: true })
+      .setLngLat(coords)
+      .setHTML(html)
+      .addTo(map);
+    setTimeout(() => drawChart(props), 100);
+  });
+
+  map.on('mouseleave', 'ports', () => {
+    map.getCanvas().style.cursor = '';
+  });
+
+  document.getElementById('yearSlider').addEventListener('input', (e) => {
+    currentYear = e.target.value;
+    document.getElementById('yearValue').innerText = currentYear;
+    map.setPaintProperty('ports', 'circle-radius', [
+      'interpolate', ['linear'], ['get', 'TEU_' + currentYear],
+      1000000, 4,
+      5000000, 8,
+      20000000, 16
+    ]);
+  });
+});
+
+// 使用 MapboxOverlay 替代 DeckGL 方式加载航线
+fetch('https://songwenkai2000.github.io/CASA0003/output_30_ports.geojson')
+  .then(res => res.json())
+  .then(data => {
+    const arcs = data.features.map(f => ({
+      sourcePosition: f.geometry.coordinates[0],
+      targetPosition: f.geometry.coordinates[1],
+      color: [0, 128, 255],
+      width: 2
+    }));
+
+    const arcLayer = new deck.ArcLayer({
+      id: 'arc-layer',
+      data: arcs,
+      getSourcePosition: d => d.sourcePosition,
+      getTargetPosition: d => d.targetPosition,
+      getWidth: d => d.width,
+      getSourceColor: d => [30, 144, 255],
+      getTargetColor: d => [255, 255, 255],
+      greatCircle: true,
+      pickable: false
+    });
+
+    const overlay = new deck.MapboxOverlay({ layers: [arcLayer] });
+    map.addControl(overlay);
+  });
+
+function drawChart(props) {
+  const chart = echarts.init(document.getElementById('echart'));
+  const years = Array.from({ length: 11 }, (_, i) => 2013 + i);
+  const teu = years.map(y => parseInt(props['TEU_' + y] || 0));
+  const gdp = years.map(y => parseFloat(props['GDP_GDP_' + y] || 0));
+  chart.setOption({
+    title: { text: props["Port_Name_"], left: 'center', textStyle: { fontSize: 12 } },
+    tooltip: { trigger: 'axis' },
+    legend: { data: ['TEU', 'GDP'], bottom: 0 },
+    xAxis: { type: 'category', data: years },
+    yAxis: {},
+    series: [
+      { name: 'TEU', type: 'bar', data: teu },
+      { name: 'GDP', type: 'line', data: gdp }
+    ]
+  });
+}
+</script>
+</body>
+</html>
