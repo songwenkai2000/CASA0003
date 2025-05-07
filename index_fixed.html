@@ -1,0 +1,101 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Maritime Silk Road Visualization (Enhanced)</title>
+  <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no" />
+  <script src="https://api.mapbox.com/mapbox-gl-js/v2.14.1/mapbox-gl.js"></script>
+  <link href="https://api.mapbox.com/mapbox-gl-js/v2.14.1/mapbox-gl.css" rel="stylesheet" />
+  <style>
+    body { margin:0; padding:0; }
+    #map { position:absolute; top:0; bottom:0; width:100%; }
+    .mapboxgl-popup-content { font: 12px/1.4 'Arial', sans-serif; }
+  </style>
+</head>
+<body>
+<div id="map"></div>
+<script>
+  mapboxgl.accessToken = 'pk.eyJ1Ijoic3drMjAwMCIsImEiOiJjbTdraXR4N3owMTZ4MmlzZG03dDIyaGJkIn0.IrX_wW0bMYbw0jOr5nIGGA';
+  const map = new mapboxgl.Map({
+    container: 'map',
+    style: 'mapbox://styles/mapbox/dark-v10',
+    center: [60, 20],
+    zoom: 2.2,
+    pitch: 0,
+    bearing: 0,
+    maxBounds: [[-180, -60], [180, 85]]
+  });
+
+  map.on('load', () => {
+    map.addSource('ports', {
+      type: 'geojson',
+      data: 'https://songwenkai2000.github.io/CASA0003/ports_cleaned.geojson'
+    });
+    map.addLayer({
+      id: 'ports',
+      type: 'circle',
+      source: 'ports',
+      paint: {
+        'circle-radius': [
+          'interpolate', ['linear'], ['get', 'TEU'],
+          1000000, 4,
+          5000000, 8,
+          20000000, 16
+        ],
+        'circle-color': '#FF9800',
+        'circle-opacity': 0.85,
+        'circle-stroke-color': '#ffffff',
+        'circle-stroke-width': 1
+      }
+    });
+
+    map.addSource('routes', {
+      type: 'geojson',
+      data: 'https://songwenkai2000.github.io/CASA0003/output_30_ports.geojson'
+    });
+    map.addLayer({
+      id: 'routes',
+      type: 'line',
+      source: 'routes',
+      paint: {
+        'line-color': [
+          'interpolate', ['linear'], ['get', 'distKM'],
+          2000, '#4fc3f7',
+          10000, '#0288d1',
+          15000, '#01579b'
+        ],
+        'line-width': [
+          'interpolate', ['linear'], ['get', 'distKM'],
+          2000, 0.5,
+          10000, 2,
+          15000, 4
+        ],
+        'line-opacity': 0.75
+      }
+    });
+
+    let popup;
+    map.on('mouseenter', 'ports', (e) => {
+      map.getCanvas().style.cursor = 'pointer';
+      const coords = e.features[0].geometry.coordinates.slice();
+      const props = e.features[0].properties;
+      const html = `<strong>${props["Port Name"]}</strong><br>TEU: ${props.TEU}<br>GDP: $${props.GDP}B`;
+      popup = new mapboxgl.Popup({ closeButton: false })
+        .setLngLat(coords)
+        .setHTML(html)
+        .addTo(map);
+    });
+
+    map.on('mouseleave', 'ports', () => {
+      map.getCanvas().style.cursor = '';
+      if (popup) popup.remove();
+    });
+
+    map.on('click', 'ports', (e) => {
+      map.flyTo({ center: e.features[0].geometry.coordinates, zoom: 5, speed: 0.8 });
+    });
+  });
+</script>
+</body>
+</html>
