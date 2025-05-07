@@ -1,0 +1,195 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Maritime Silk Road: Ports + Routes + Time Series</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <script src="https://api.mapbox.com/mapbox-gl-js/v2.14.1/mapbox-gl.js"></script>
+  <link href="https://api.mapbox.com/mapbox-gl-js/v2.14.1/mapbox-gl.css" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+  <style>
+    body { margin: 0; padding: 0; }
+    #map { position: absolute; top: 0; bottom: 0; width: 100%; }
+    #chart-popup {
+      position: absolute;
+      display: none;
+      background-color: rgba(255, 255, 255, 0.95);
+      padding: 10px;
+      border-radius: 5px;
+      z-index: 10;
+      width: 380px;
+      height: 220px;
+    }
+    #controls {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background: rgba(0,0,0,0.6);
+      padding: 10px;
+      border-radius: 5px;
+      color: white;
+      font-family: sans-serif;
+      z-index: 100;
+    }
+  </style>
+</head>
+<body>
+<div id="map"></div>
+<div id="chart-popup"><div id="echart" style="width:100%; height:100%;"></div></div>
+<div id="controls">
+  <label>Year: <input type="range" min="2013" max="2023" value="2013" id="yearSlider" /></label>
+  <button onclick="autoPlay()">▶ Play</button>
+  <select onchange="flyToRegion(this.value)">
+    <option value="">-- Fly to region --</option>
+    <option value="Asia">Asia</option>
+    <option value="Europe">Europe</option>
+    <option value="Africa">Africa</option>
+  </select>
+</div>
+
+<script>
+mapboxgl.accessToken = 'pk.eyJ1Ijoic3drMjAwMCIsImEiOiJjbTdraXR4N3owMTZ4MmlzZG03dDIyaGJkIn0.IrX_wW0bMYbw0jOr5nIGGA';
+const map = new mapboxgl.Map({
+  container: 'map',
+  style: 'mapbox://styles/mapbox/dark-v10',
+  center: [60, 15],
+  zoom: 2.3,
+  pitch: 0,
+  bearing: 0
+});
+
+let chart = echarts.init(document.getElementById('echart'));
+let autoInterval = null;
+
+function autoPlay() {
+  let year = parseInt(document.getElementById("yearSlider").value);
+  clearInterval(autoInterval);
+  autoInterval = setInterval(() => {
+    if (year > 2023) year = 2013;
+    document.getElementById("yearSlider").value = year;
+    updatePortCircleSize(year);
+    year++;
+  }, 1500);
+}
+
+function flyToRegion(region) {
+  const bounds = {
+    Asia: [[30, -10], [130, 50]],
+    Europe: [[-10, 35], [40, 70]],
+    Africa: [[-20, -35], [50, 35]]
+  };
+  if (bounds[region]) {
+    map.fitBounds(bounds[region], { padding: 20 });
+  }
+}
+
+map.on('load', () => {
+  // Load routes
+  map.addSource('routes', {
+    type: 'geojson',
+    data: 'output_30_ports_styled.geojson'
+  });
+  map.addLayer({
+    id: 'route-lines',
+    type: 'line',
+    source: 'routes',
+    layout: { 'line-join': 'round', 'line-cap': 'round' },
+    paint: {
+      'line-color': ['get', 'line_color'],
+      'line-width': ['get', 'line_width'],
+      'line-opacity': 0.85
+    }
+  });
+
+  // Load ports
+  map.addSource('ports', {
+    type: 'geojson',
+    data: 'ports_2013_2023.geojson'
+  });
+  map.addLayer({
+    id: 'port-circles',
+    type: 'circle',
+    source: 'ports',
+    paint: {
+      'circle-radius': ['interpolate', ['linear'], ['get', 'TEU_2013'], 0, 4, 50000000, 16],
+      'circle-color': '#ffcc00',
+      'circle-opacity': 0.85
+    }
+  });
+
+  // Hover pop-up chart
+
+function drawChart(props) {
+  const chart = echarts.init(document.getElementById('echart'));
+  const years = Array.from({ length: 11 }, (_, i) => 2013 + i);
+  const teu = years.map(y => parseInt(props['TEU_' + y] || 0));
+  const gdp = years.map(y => parseFloat(props['GDP_' + y] || 0));
+  const lsci = years.map(y => parseFloat(props['LSCI_' + y] || 0));
+
+  chart.setOption({
+    grid: { left: 50, right: 60, top: 30, bottom: 30 },
+    title: { text: props["Port Name"] || "", left: 'center', textStyle: { fontSize: 12 } },
+    tooltip: { trigger: 'axis' },
+    legend: { data: ['TEU', 'GDP', 'LSCI'], bottom: 0 },
+    xAxis: { type: 'category', data: years },
+    yAxis: [
+      { type: 'value', name: 'TEU', position: 'left' },
+      { type: 'value', name: 'GDP (B $)', position: 'right', offset: 40 },
+      { type: 'value', name: 'LSCI', position: 'right' }
+    ],
+    series: [
+      { name: 'TEU', type: 'bar', data: teu, yAxisIndex: 0, itemStyle: { color: '#4F81BD' } },
+      { name: 'GDP', type: 'line', data: gdp, yAxisIndex: 1, lineStyle: { color: '#4CAF50' } },
+      { name: 'LSCI', type: 'line', data: lsci, yAxisIndex: 2, lineStyle: { color: '#FFA726' } }
+    ]
+  });
+}
+
+  map.on('mousemove', 'port-circles', (e) => {
+    const props = e.features[0].properties;
+    const popup = document.getElementById('chart-popup');
+    popup.style.left = e.point.x + 20 + 'px';
+    popup.style.top = e.point.y + 20 + 'px';
+    popup.style.display = 'block';
+
+    const years = Array.from({length: 11}, (_, i) => 2013 + i);
+    const teu = years.map(y => parseInt(props[`TEU_${y}`]) || 0);
+    const gdp = years.map(y => parseFloat(props[`GDP_${y}`]) || 0);
+    const lsci = years.map(y => parseFloat(props[`LSCI_${y}`]) || 0);
+
+    chart.setOption({
+      tooltip: { trigger: 'axis' },
+      legend: { data: ['TEU', 'GDP', 'LSCI'] },
+      xAxis: { type: 'category', data: years },
+      yAxis: [
+        { type: 'value', name: 'TEU' },
+        { type: 'value', name: 'GDP (B USD)', position: 'right' }
+      ],
+      series: [
+        { name: 'TEU', type: 'bar', data: teu },
+        { name: 'GDP', type: 'line', yAxisIndex: 1, data: gdp },
+        { name: 'LSCI', type: 'line', yAxisIndex: 0, data: lsci }
+      ]
+    });
+  });
+
+  map.on('mouseleave', 'port-circles', () => {
+    document.getElementById('chart-popup').style.display = 'none';
+  });
+
+  // Respond to time slider
+  document.getElementById("yearSlider").addEventListener("input", (e) => {
+    const year = parseInt(e.target.value);
+    updatePortCircleSize(year);
+  });
+
+  function updatePortCircleSize(year) {
+    map.setPaintProperty('port-circles', 'circle-radius', [
+      'interpolate', ['linear'], ['get', `TEU_${year}`], 0, 4, 50000000, 16
+    ]);
+  }
+});
+</script>
+</body>
+</html>
