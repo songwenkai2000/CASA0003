@@ -1,0 +1,228 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Maritime Silk Road – Fixed DeckGL</title>
+  <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no" />
+  <script src="https://api.mapbox.com/mapbox-gl-js/v2.14.1/mapbox-gl.js"></script>
+  <link href="https://api.mapbox.com/mapbox-gl-js/v2.14.1/mapbox-gl.css" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/echarts@5"></script>
+  <script src="https://cdn.jsdelivr.net/npm/deck.gl@8.8.19/dist.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@deck.gl/mapbox@8.8.19/dist.min.js"></script>
+  <style>
+    body { margin:0; padding:0; }
+    #map { position:absolute; top:0; bottom:0; width:100%; }
+    #timeline {
+      position: absolute;
+      bottom: 15px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #111;
+      padding: 10px;
+      border-radius: 4px;
+      color: white;
+      z-index: 10;
+    }
+    .mapboxgl-popup-content { width: 300px; height: 240px; pointer-events: none; }
+    #playButton {
+      margin-left: 10px;
+      padding: 2px 6px;
+      background: #333;
+      color: #fff;
+      border: none;
+      cursor: pointer;
+    }
+    .controls {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background: rgba(0,0,0,0.7);
+      color: white;
+      padding: 8px;
+      border-radius: 6px;
+      font-size: 12px;
+      z-index: 20;
+    }
+    .controls button {
+      margin: 3px;
+      background: #222;
+      color: white;
+      border: none;
+      padding: 5px 10px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+<div id="map"></div>
+<div id="timeline">
+  年: <input type="range" id="yearSlider" min="2013" max="2023" value="2023" step="1" />
+  <span id="yearValue">2023</span>
+  <button id="playButton">▶️</button>
+</div>
+<div class="controls">
+  飞往: 
+  <button onclick="flyTo([100, 20])">亚洲</button>
+  <button onclick="flyTo([30, 10])">非洲</button>
+  <button onclick="flyTo([10, 50])">欧洲</button>
+</div>
+<script>
+mapboxgl.accessToken = 'pk.eyJ1Ijoic3drMjAwMCIsImEiOiJjbTdraXR4N3owMTZ4MmlzZG03dDIyaGJkIn0.IrX_wW0bMYbw0jOr5nIGGA';
+const map = new mapboxgl.Map({
+  container: 'map',
+  style: 'mapbox://styles/mapbox/dark-v10',
+  center: [60, 20],
+  zoom: 2.2,
+  pitch: 0,
+  bearing: 0
+});
+
+let currentYear = "2023";
+let popup;
+let playInterval = null;
+
+function flyTo(center) {
+  map.flyTo({ center, zoom: 3, speed: 0.6 });
+}
+
+map.on('load', () => {
+  // Load styled routes
+  map.addSource('routes', {
+    type: 'geojson',
+    data: 'https://songwenkai2000.github.io/CASA0003/output_30_ports_styled.geojson'
+  });
+  map.addLayer({
+    id: 'route-lines',
+    type: 'line',
+    source: 'routes',
+    layout: { 'line-join': 'round', 'line-cap': 'round' },
+    paint: {
+      'line-color': ['get', 'line_color'],
+      'line-width': ['get', 'line_width'],
+      'line-opacity': 0.85
+    }
+  });
+
+  map.addSource('ports', {
+    type: 'geojson',
+    data: 'https://songwenkai2000.github.io/CASA0003/ports_cleaned.geojson'
+  });
+
+  map.addLayer({
+    id: 'ports',
+    type: 'circle',
+    source: 'ports',
+    paint: {
+      'circle-radius': [
+        'interpolate', ['linear'], ['get', 'TEU_' + currentYear],
+        1000000, 4,
+        5000000, 8,
+        20000000, 16
+      ],
+      'circle-color': '#FFA726',
+      'circle-opacity': 0.8,
+      'circle-stroke-color': '#fff',
+      'circle-stroke-width': 1
+    }
+  });
+
+  map.on('mouseenter', 'ports', (e) => {
+    map.getCanvas().style.cursor = 'pointer';
+    const props = e.features[0].properties;
+    const coords = e.features[0].geometry.coordinates;
+    const html = `<div id="echart" style="width:280px;height:230px;"></div>`;
+    if (popup) popup.remove();
+    popup = new mapboxgl.Popup({ closeButton: true, closeOnClick: false })
+      .setLngLat(coords)
+      .setHTML(html)
+      .addTo(map);
+    setTimeout(() => drawChart(props), 100);
+  });
+
+  map.on('mouseleave', 'ports', () => {
+    map.getCanvas().style.cursor = '';
+    if (popup) popup.remove();
+  });
+
+  document.getElementById('yearSlider').addEventListener('input', (e) => {
+    currentYear = e.target.value;
+    document.getElementById('yearValue').innerText = currentYear;
+    map.setPaintProperty('ports', 'circle-radius', [
+      'interpolate', ['linear'], ['get', 'TEU_' + currentYear],
+      1000000, 4,
+      5000000, 8,
+      20000000, 16
+    ]);
+  });
+
+  document.getElementById('playButton').addEventListener('click', () => {
+    if (playInterval) {
+      clearInterval(playInterval);
+      playInterval = null;
+      document.getElementById('playButton').innerText = '▶️';
+    } else {
+      playInterval = setInterval(() => {
+        let year = parseInt(currentYear);
+        year = (year < 2023) ? year + 1 : 2013;
+        document.getElementById('yearSlider').value = year;
+        document.getElementById('yearSlider').dispatchEvent(new Event('input'));
+      }, 1500);
+      document.getElementById('playButton').innerText = '⏸️';
+    }
+  });
+
+  // ArcLayer 动画路径 (通过 deck.gl + MapboxOverlay 添加)
+  fetch('https://songwenkai2000.github.io/CASA0003/output_30_ports.geojson')
+    .then(res => res.json())
+    .then(data => {
+      const arcs = data.features.map((f, i) => ({
+        sourcePosition: f.geometry.coordinates[0],
+        targetPosition: f.geometry.coordinates[1],
+        width: 2 + (i % 3),
+        color: [255 - i * 5 % 255, 140 + i * 2 % 115, 255]
+      }));
+
+      const arcLayer = new deck.ArcLayer({
+        id: 'arc-layer',
+        data: arcs,
+        getSourcePosition: d => d.sourcePosition,
+        getTargetPosition: d => d.targetPosition,
+        getWidth: d => d.width,
+        getSourceColor: d => d.color,
+        getTargetColor: d => [255, 255, 255],
+        greatCircle: true,
+        pickable: false
+      });
+
+      const overlay = new deck.MapboxOverlay({ layers: [arcLayer] });
+      map.addControl(overlay);
+    });
+});
+
+function drawChart(props) {
+  const chart = echarts.init(document.getElementById('echart'));
+  const years = Array.from({ length: 11 }, (_, i) => 2013 + i);
+  const teu = years.map(y => parseInt(props['TEU_' + y] || 0));
+  const gdp = years.map(y => parseFloat(props['GDP_GDP_' + y] || 0));
+  chart.setOption({
+    grid: { left: 50, right: 20, top: 30, bottom: 30 },
+    title: { text: props["Port_Name_"], left: 'center', textStyle: { fontSize: 12 } },
+    tooltip: { trigger: 'axis' },
+    legend: { data: ['TEU', 'GDP'], bottom: 0 },
+    xAxis: { type: 'category', data: years },
+    
+    yAxis: [
+      { type: 'value', name: 'TEU' },
+      { type: 'value', name: 'GDP (Billion $)', position: 'right', axisLine: { lineStyle: { color: '#4CAF50' } } }
+    ],
+    
+    series: [
+      { name: 'TEU', type: 'bar', data: teu, itemStyle: { color: '#4F81BD' } },
+      { name: 'GDP', type: 'line', data: gdp, yAxisIndex: 1, lineStyle: { color: '#4CAF50' } }
+    ]
+  });
+}
+</script>
+</body>
+</html>
