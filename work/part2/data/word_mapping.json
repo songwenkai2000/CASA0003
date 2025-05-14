@@ -1,0 +1,61 @@
+{
+  "Ice Breaking Tour": {
+    "cities": [
+      "city_chongqing",
+      "city_duisburg"
+    ],
+    "title": "Ice Breaking Tour",
+    "description": "On March 19, 2011, a train loaded with laptops, mechanical parts and daily necessities departed from Chongqing, passing through six countries via Alashankou and arriving in Duisburg, Germany. Faced with the dilemma of 40 days of water transport and high air transport costs, this 11,179-kilometer railway pioneered a six-country intermodal customs clearance mode, opening up a land transport vein connecting China's inland to Europe in 16 days, and the winter constant temperature container technology solved the problem of cross-border transportation of electronic products. The first train not only efficiently transported 1/6 of Chongqing's global laptop production capacity to Europe, but also triggered a chain reaction: the annual number of trains increased from 17 in the early stage to 4,600 (2023), and 12 international distribution centers were set up on the Eurasian continent, promoting the two-way fast-track circulation of Chinese-made and European goods, and reshaping the global industrial logistics landscape."
+  },
+  "Speed ​​Revolution": {
+    "cities": [
+      "city_chongqing",
+      "city_duisburg"
+    ],
+    "title": "Speed ​​Revolution",
+    "description": "The 11-day high-speed train from Chongqing to Duisburg shortens the travel time by 30% compared to the first flight; the Wuhan to Pardubice line in the Czech Republic has set a new record for China-Europe land transport with a travel time of 8.9 days."
+  },
+  "New inland opening hub": {
+    "cities": [
+      "city_chongqing",
+      "city_chengdu",
+      "city_xi'an"
+    ],
+    "title": "New inland opening hub",
+    "description": "Xi'an will operate 4,354 trains in 2024, giving birth to a 300 billion-level automobile industry cluster; Chongqing has built the first inland automated unmanned terminal, and the annual transaction volume of cross-border e-commerce has exceeded 50 billion yuan. The waterless port on the rails has enabled western cities to break through geographical constraints and directly communicate with the global market. The port-industry-city integration model activates inland momentum: the western trade volume with Europe has increased by an average of 27% per year, three times the growth rate of coastal areas. The steel camel caravan simultaneously pulls international production capacity - Polish dairy products and Hungarian optoelectronic modules reach the hinterland of China through return trains, realizing a two-way second-level response of industrial elements in Asia and Europe."
+  },
+  "New Asia-Europe Industrial Corridor": {
+    "cities": [],
+    "title": "New Asia-Europe Industrial Corridor",
+    "description": "The CR Express has helped build an automotive parts and smart home industry cluster in Malaszewicze, Poland, with 120 Chinese companies and European suppliers forming direct workshop connections; Almaty, Kazakhstan, has emerged as the largest monocrystalline silicon base in Central Asia, and Chinese photovoltaic panels can be directly transported to European power stations in eight days via the train. The multinational production line on the rails has achieved seamless connection from raw material procurement, production and assembly to market launch. The railway economic corridor has spawned a $2.3 trillion industrial aggregation belt covering 41 countries, with 76% of the world's new energy equipment suppliers gathered within a 50-kilometer radius of the train station. Innovative carriers such as the China-Poland Joint R&D Center and the China-Kazakhstan Digital Customs Platform are building an intelligent coupling system for industrial elements in Asia and Europe."
+  },
+  "Energy security": {
+    "cities": [],
+    "title": "Energy security",
+    "description": "The CR Express opens up a second energy transportation channel: LNG tank container transportation volume surges by 217% in 2024, and the Xinjiang-Germany green hydrogen train achieves 10,000-ton transportation, with a single-train liquid ammonia capacity of 3,000 tons, and the cost is 31% lower than sea transportation. The steel artery is equipped with photovoltaic hydrogen production equipment and intelligent pressure regulation system to build a three-dimensional energy network of West-East Hydrogen Delivery + Eurasian Intermodal Transport. The railway energy corridor can replace 128,000 diesel trucks each year, and a single trip of liquid ammonia transportation reduces carbon emissions by 480 tons. The -253℃ deep cold storage and transportation technology jointly developed by China and Germany keeps the green hydrogen transportation loss rate within 0.7%, setting a new benchmark for land transportation for the global clean energy supply chain."
+  },
+  "Intelligent transportation system": {
+    "cities": [
+      "city_zhengzhou"
+    ],
+    "title": "Intelligent transportation system",
+    "description": "Zhengzhou Logistics Brain analyzes 12 million pieces of transport data, and intelligent loading makes the train loading rate jump to 95.3%, and the cost per box drops by 18%; Xi'an's digital mirror system builds a transport digital twin, realizes real-time monitoring of 137 parameters, and the temperature control accuracy reaches ±0.5℃. Driven by algorithms, the Eurasian railway network is evolving into an intelligent life form that makes autonomous decisions. The intelligent transportation system has deployed 8,800 IoT devices and processes 24,000 data streams per second. Customers can see the internal status of the container through the augmented reality interface, and the response speed of the rainstorm warning is shortened to 8.7 seconds. The quantum encryption communication module jointly developed by China and Germany has raised the security level of cross-border data transmission to military standards."
+  },
+  "Green Transportation": {
+    "cities": [
+      "city_chongqing"
+    ],
+    "title": "Green Transportation",
+    "description": "The world's first 98% carbon emission reduction logistics artery runs across Xinjiang. Hydrogen locomotives pull photovoltaic rails to extend. 28,000 smart photovoltaic panels along the line supply more than 30,000 trains annually. The blockchain carbon ledger accurately tracks the carbon footprint of each box of goods. The long steel dragon coexists with the Gobi scenery, reconstructing the energy balance between transportation and nature. Chongqing pioneered the hydrogen energy supply chain, and 15 smart hydrogen refueling stations were deployed along the train line to achieve a zero-carbon closed loop for new energy vehicle transportation. Moreover, through the surplus electricity hydrogen production and waste heat recovery technology, each train can produce an additional 1,200 cubic meters of green hydrogen, driving the self-energy supply cycle of the logistics network."
+  },
+  "Intermodal Network": {
+    "cities": [],
+    "title": "Intermodal Network",
+    "description": "The Yangtze River Delta pioneered the sea-rail express line: cargo landed at Ningbo Port can reach Europe directly via the Yixin-Europe Express in 72 hours, building a golden channel with a 22% reduction in costs and a 40% increase in efficiency. The blockchain electronic bill of lading system enables data exchange between ports and railways in seconds, and the terminal gantry crane and train containers complete millimeter-level automatic loading."
+  },
+  "Geopolitics": {
+    "cities": [],
+    "title": "Geopolitics",
+    "description": "As the Red Sea crisis caused shipping costs to surge by 78%, the China-Europe Express launched an emergency channel across the Caspian Sea, reaching Europe directly via Azerbaijan and Georgia. In 2024, the number of trains on this line surged by 127%. While maintaining a 12-day transportation time limit, it successfully avoided 33 traditional risk nodes, and the cost of alternative transportation only increased by 5%."
+  }
+}
