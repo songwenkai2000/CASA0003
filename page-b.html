@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Group 14 Visualisation</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <!-- Import Mapbox GL JS -->
+    <link
+      href="https://api.tiles.mapbox.com/mapbox-gl-js/v3.3.0/mapbox-gl.css"
+      rel="stylesheet"
+    />
+    <script src="https://api.tiles.mapbox.com/mapbox-gl-js/v3.3.0/mapbox-gl.js"></script>
+    <link rel="stylesheet" href="styles.css" />
+
+    <!-- Import moment.js -->
+    <script src="https://cdn.jsdelivr.net/npm/moment@2.29.1/moment.min.js"></script>
+
+    <!-- Import Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
+
+    <!-- Import turf.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Turf.js/6.5.0/turf.min.js"></script>
+
+    <!-- Import font-awesome -->
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
+    />
+    <!-- Import jsdelivr -->
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5"></script>
+    <script src="https://cdn.jsdelivr.net/npm/deck.gl@8.8.19/dist.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@deck.gl/mapbox@8.8.19/dist.min.js"></script>
+  </head>
+
+  <body>
+    <!-- 导航栏 -->
+    <nav class="navbar">
+      <a href="#section-title" class="section-title"
+        >The Belt and Road Initiative</a
+      >
+      <a href="#section-cover">Home</a>
+      <a href="#section-intro">Introduction</a>
+      <a href="#section-globe">Globe Map</a>
+      <a href="#section-mapinfo">CR Express</a>
+      <a href="#section-maritimeinfo">Maritime</a>
+      <a href="#section-con">Conclusion</a>
+      <a href="#section-ref">References</a>
+    </nav>
+
+    <!-- 封面章节 -->
+    <section id="section-cover" class="section cover">
+      <div class="cover-title-box">
+        <h1>The Belt and Road Initiative</h1>
+        <h2>Reshaping the Urban Network Across Eurasia</h2>
+      </div>
+      <a href="#section-intro" class="scroll-arrow">
+        <i class="fa-solid fa-chevron-down"></i>
+      </a>
+    </section>
+
+    <!-- 介绍章节 -->
+    <section id="section-intro" class="section">
+      <div class="intro-box">
+        <p class="intro-top-text">
+          The Belt and Road Initiative (BRI), unveiled in 2013, takes its name
+          from two historic trade routes: the overland “Silk Road Economic Belt”
+          and the maritime “21st-Century Maritime Silk Road,” together aiming to
+          revive and expand the ancient Silk Road network.
+        </p>
+        <div class="image-row">
+          <div class="image-item">
+            <img src="pic/intro_1.jpg" alt="Image 1 description" />
+            <p class="caption">
+              On May 25, 2024, the X8157 China-Europe freight train departed
+              from Xi'an International Port Station and headed for Malaszewicze,
+              Poland.
+            </p>
+          </div>
+          <div class="image-item">
+            <img src="pic/intro_2.jpg" alt="Image 2 description" />
+            <p class="caption">
+              A cargo ship from China's Taicang Port arrives at Peru's giant
+              deepwater port of Chancay
+            </p>
+          </div>
+        </div>
+        <p class="intro-bottom-text">
+          2023 marks the 10th anniversary of the Belt and Road Initiative (BRI),
+          which has seen over 150 countries and 30 international organizations
+          join and sign more than 200 cooperation documents. Spanning Asia,
+          Europe, Africa, and beyond, the BRI drives infrastructure development
+          in railways, highways, ports, energy pipelines, and digital networks
+          across its member nations.
+        </p>
+      </div>
+    </section>
+
+    <!-- 地图1章节 -->
+    <section id="section-globe" class="section">
+      <div id="map_1"></div>
+      <div class="map1-box">
+        <p>
+          China’s Belt and Road Initiative burst onto the world stage in October
+          2013 in Astana and Jakarta to unveil an overland “Silk Road Economic
+          Belt” and a “21st-Century Maritime Silk Road.” Its inaugural
+          memorandum with Kazakhstan set the pace, quickly followed by a pact in
+          Indonesia. Within a year, scores of nations across Asia, Europe and
+          Africa rallied behind BRI’s vision, pledging to modernize railways,
+          power grids and digital networks.
+        </p>
+        <p>
+          By 2014, the newly formed Asian Infrastructure Investment Bank—born of
+          BRI ambition—welcomed 21 founding members, from India to Italy. Today,
+          the BRI spans hundreds of ventures worth over \$800 billion, weaving a
+          vibrant tapestry of trade routes and forging fresh bonds across
+          continents.
+        </p>
+      </div>
+    </section>
+
+    <!-- 地图2前页 -->
+    <section id="section-mapinfo" class="section">
+      <div class="mapinfo-box1">
+        <h2>CR Express</h2>
+      </div>
+      <div class="mapinfo-box2">
+        <div class="mapinfo-text">
+          Since its 2013 launch under the Belt and Road Initiative, the China
+          Railway Express (CR Express) has become a vital overland artery. What
+          began as service to just a few European cities now spans 82 routes
+          across 25 countries and over 200 cities, with more than 190,000 trains
+          operated to date. In 2024, rail freight volume reached 2.07 million
+          TEU—over 80% of China–Europe land trade—while new models such as
+          cold‐chain logistics and cross‐border e-commerce have emerged. This
+          network solidifies the rail link as a cornerstone for Asia–Europe
+          industrial collaboration, driving faster, more diversified supply
+          chains across continents.
+        </div>
+        <div id="chart-container">
+          <canvas id="briChart"></canvas>
+        </div>
+      </div>
+    </section>
+
+    <!-- 地图2章节 -->
+    <section id="section-map" class="section">
+      <!-- 地图容器 -->
+      <div id="map_2">
+        <!-- 信息弹窗-->
+        <div id="infoPanel" class="info-panel">
+          <h3 id="infoTitle"></h3>
+          <p id="infoText"></p>
+          <canvas id="infoChart"></canvas>
+        </div>
+
+        <!-- 侧边栏 -->
+        <div id="MainSidebar">
+          <!-- 按钮区域 -->
+          <div class="sidebar-buttons">
+            <button id="btnPage1" class="sidebar-toggle">Channels</button>
+            <button id="btnPage2" class="sidebar-toggle">Keywords</button>
+          </div>
+          <!-- 页面 1 -->
+          <div class="sidebar-page" id="page1">
+            <p class="sidebar-text">
+              The West Channel links China’s interior to Europe via two major
+              crossings, handling over 60% of China–Europe freight and mainly
+              moving manufactured goods from the Yangtze and Pearl River
+              regions.
+            </p>
+            <p class="sidebar-text">
+              The Middle Channel runs through a northern gateway, connecting
+              China’s heartland with Russia and the Nordics, specializing in
+              fast transport of automotive and heavy machinery.
+            </p>
+            <p class="sidebar-text">
+              The East Channel employs two northeastern crossings to bridge
+              China’s old industrial base with Europe, facilitating Asian trade
+              flows and accounting for 28% of corridor cargo in 2024.
+            </p>
+            <div class="chart-section">
+              <canvas id="trainChart"></canvas>
+            </div>
+          </div>
+          <!-- 页面 2 -->
+          <div class="sidebar-page" id="page2" style="display: none">
+            <h2>Keywords</h2>
+            <!-- 词云 -->
+            <div id="wordcloud"></div>
+            <!-- 小字提示 -->
+            <div
+              style="
+                font-size: 14px;
+                color: #474747;
+                font-style: italic;
+                margin-bottom: 10px;
+              "
+            >
+              Click a keyword to view details
+            </div>
+          </div>
+          <!-- 页面切换按钮 -->
+          <!-- 按钮组 -->
+          <div id="lineSelection">
+            <div class="line-buttons">
+              <button class="line-button" data-line="west_continuous">
+                West Channel
+              </button>
+              <button class="line-button" data-line="middle_continuous">
+                Middle Channel
+              </button>
+              <button class="line-button" data-line="east_continuous">
+                East Channel
+              </button>
+            </div>
+          </div>
+
+          <!-- 切换逻辑脚本 -->
+          <script>
+            // 获取节点
+            const page1 = document.getElementById("page1");
+            const page2 = document.getElementById("page2");
+            const btn1 = document.getElementById("btnPage1");
+            const btn2 = document.getElementById("btnPage2");
+
+            // 切换显示函数
+            function showPage(n) {
+              if (n === 1) {
+                page1.style.display = "block";
+                page2.style.display = "none";
+                btn1.classList.add("active");
+                btn2.classList.remove("active");
+              } else {
+                page1.style.display = "none";
+                page2.style.display = "block";
+                btn1.classList.remove("active");
+                btn2.classList.add("active");
+              }
+            }
+
+            // 默认加载第一页
+            document.addEventListener("DOMContentLoaded", () => {
+              showPage(1);
+              // 绑定点击
+              btn1.addEventListener("click", () => showPage(1));
+              btn2.addEventListener("click", () => showPage(2));
+
+              // 导航栏被选中效果
+              const navLinks = document.querySelectorAll(".navbar a");
+
+              navLinks.forEach((link) => {
+                link.addEventListener("click", () => {
+                  navLinks.forEach((l) => l.classList.remove("active")); // 清除所有
+                  link.classList.add("active"); // 添加当前
+                });
+              });
+            });
+          </script>
+        </div>
+      </div>
+      <!-- 渐隐遮罩层 -->
+      <div id="mapOverlay"></div>
+    </section>
+
+    <!-- 地图3前页 -->
+    <section id="section-maritimeinfo" class="section">
+      <div class="maritimeinfo-box1">
+        <h2>Maritime Silk Road</h2>
+      </div>
+      <div class="maritimeinfo-box2">
+        <div class="maritimeinfo-text">
+          As the CR Express flourished, the 21st-Century Maritime Silk Road
+          simultaneously enhanced East–West sea networks. China partnered with
+          coastal nations in Southeast Asia, South Asia, Africa, and Europe to
+          upgrade port infrastructure and optimize routes—jointly managing
+          operations at Piraeus in Greece and Gwadar in Pakistan. Investments in
+          logistics hubs and expanded regional free-trade agreements have driven
+          significant growth in maritime cargo over the past decade.
+          Strengthened interconnectivity in energy and manufacturing, along with
+          digital and green technologies in port development, have further
+          reinforced the global impact of these maritime routes.
+        </div>
+      </div>
+    </section>
+
+    <!-- 地图3章节 -->
+    <section id="section-maritime" class="section">
+      <div id="map_3">
+        <!-- 侧边栏 -->
+        <div id="MainSidebar">            
+          <h3>
+          Visualization of Maritime Silk Road Ports
+          </h3>
+          <h3>
+          The Maritime Silk Road was an ancient maritime route for trade and cultural exchanges between China and foreign countries. It mainly consisted of the East China Sea route and the South China Sea route. It emerged during the Qin and Han dynasties, developed in the Three Kingdoms and Sui dynasties, reached its peak in the Tang and Song dynasties, and underwent changes in the Ming and Qing dynasties. It is known as one of the oldest maritime routes in the world. This map shows the changes in the freight throughput (TEU) of major ports and the GDP of their respective cities from 2013 to 2023. The Maritime Silk Road not only promoted economic development but also facilitated the spread of cultures, technologies, and ideas between different regions. It connected the East and the West, enabling the exchange of goods such as silk, porcelain, spices, and precious metals. Through this route, merchants from various countries established trade relations, leading to the growth of port cities and the development of international trade networks. The cultural exchanges along the Maritime Silk Road also had a profound impact on art, religion, and science, contributing to the diversity and progress of human civilization.
+          </h3>
+        </div>
+        <div id="timeline">
+          Year:
+          <input
+            type="range"
+            id="yearSlider"
+            min="2013"
+            max="2023"
+            value="2023"
+            step="1"
+          />
+          <span id="yearValue">2023</span>
+          <button id="playButton">▶️</button>
+        </div>
+        <div class="controls">
+          Fly to:
+          <button onclick="flyTo([100, 20])">Asia</button>
+          <button onclick="flyTo([30, 10])">Africa</button>
+          <button onclick="flyTo([10, 50])">Europe</button>
+        </div>
+      </div>
+    </section>
+
+      <!-- Maritime Map Link Thumbnails Section -->
+        <div style="text-align: center; background-color:rgb(31, 29, 29);padding: 20px 0; margin: 0;">
+          <h2 style="color: #fff; font-size: 20px">Explore Additional Maritime Visualizations</h2>
+          <div style="display: flex; justify-content: center; gap: 80px; flex-wrap: wrap; margin-top: 20px;">
+       
+            <!-- Link to Dynamic Simulation -->
+            <div style="text-align: center;">
+              <a href="https://songwenkai2000.github.io/CASA0003/China_Maritime_Capacity_Multiselect_BW_Corrected.html" target="_blank">
+                <img src="https://songwenkai2000.github.io/CASA0003/Dynamic%20Simulation.gif" 
+                     alt="Dynamic Simulation" 
+                     style="width: 300px; height: 190px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.3);"/>
+              </a>
+              <p style="margin-top: 10px; color: #fff; font-size: 18px;">Dynamic Simulation</p>
+            </div>
+ 
+            <!-- Link to LSCI Heatmap -->
+            <div style="text-align: center;">
+              <a href="https://songwenkai2000.github.io/CASA0003/Maritime_Capacity_Map_Combined_Fixed.html" target="_blank">
+                <img src="https://songwenkai2000.github.io/CASA0003/LSCI%20Heatmap.gif" 
+                     alt="LSCI Heatmap" 
+                     style="width: 300px; height: 190px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.3);"/>
+              </a>
+              <p style="margin-top: 10px; color: #fff; font-size: 18px;">LSCI Heatmap</p>
+            </div>
+          </div>
+        </div>
+
+    <!-- 总结页章节 -->
+    <section id="section-con" class="section">
+      <div class="con-box">
+        <div class="con-text">
+          As the core part of the Belt and Road framework, the CR Express and
+          maritime corridors form a seamless, bidirectional transport network
+          across Eurasia. Together, these corridors have helped push
+          Sino-European annual trade beyond $800 billion and spawned new models
+          like cross-border e-commerce and green logistics.
+        </div>
+        <div class="con-text">
+          Today, Belt and Road collaboration extends from rail links such as the
+          China-Laos Railway and Jakarta–Bandung High-Speed Rail to clean-energy
+          projects in Southeast Asia and Central Asia, and to innovations in
+          cross-border payments and digital port operations—forming a
+          multidimensional synergy in infrastructure, energy, and technology.
+        </div>
+        <div class="conimage-row">
+          <div class="conimage-item">
+            <img src="pic/con1.jpg" alt="Image 1 description" />
+            <p class="caption">
+              Foreign media representatives attend 2024 Belt and Road Media
+              Cooperation Forum
+            </p>
+          </div>
+          <div class="conimage-item">
+            <img src="pic/con2.jpg" alt="Image 2 description" />
+            <p class="caption">
+              October 2023, the opening ceremony of the third Belt and Road
+              Forum for International Cooperation
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 引用页章节 -->
+    <section id="section-ref" class="section">
+      <div class="ref-box">
+        <h2>References</h2>
+        <p class="ref-text">
+          Guo, J. and Thanathawee, C. (2019) ‘The Factors Influencing the
+          Success of Railway Transportation : A Case Study of China Railway
+          Express’, Journal of Supply Chain Management: Research and Practice,
+          13(2). Available at:
+          https://jscm.au.edu/index.php/jscm/article/view/174 (Accessed: 12 May
+          2025).
+        </p>
+        <p class="ref-text">
+          Liu, J., Zhang, Z. and Chen, T. (2024) ‘The impact of China railway
+          express on foreign direct investment inflows in Chinese central and
+          western cities’, Heliyon, 10(9), p. e30120. doi:
+          10.1016/j.heliyon.2024.e30120.
+        </p>
+        <p class="ref-text">
+          Yan, B. et al. (2022) ‘Impact of China Railway Express on Urban
+          Exports: Evidence from Prefectural-Level City Economic Data’, Procedia
+          Computer Science, 214, pp. 1222–1227. doi:
+          10.1016/j.procs.2022.11.299.
+        </p>
+        <p class="ref-text">
+          Yu, Q. et al. (2024) ‘Sustainable Development of the China Railway
+          Express under the Belt and Road Initiative: Focusing on Infrastructure
+          Reliability and Trade Facilitation’, Sustainability, 16(18), p. 8167.
+          doi: 10.3390/su16188167.
+        </p>
+        <p class="ref-text">
+          https://www.investopedia.com/terms/o/one-belt-one-road-obor.asp?utm_source=chatgpt.com
+          "How China's One Belt One Road (OBOR) Initiative Works & Its Goals"
+        </p>
+        <p class="ref-text">
+          https://time.com/4776845/china-xi-jinping-belt-road-initiative-obor/?utm_source=chatgpt.com
+          "China Says It's Building the New Silk Road. Here Are Five Things to
+          Know Ahead of a Key Summit"
+        </p>
+        <p class="ref-text">
+          https://www.newyorker.com/magazine/2018/01/08/a-new-silk-road?utm_source=chatgpt.com
+          "A New Silk Road"
+        </p>
+      </div>
+    </section>
+
+    <!-- 脚本引用 -->
+    <!-- page -->
+    <script src="page_animate.js"></script>
+    <!-- map1 -->
+    <script src="part1/part1_data.js"></script>
+    <script src="part1/part1_script.js"></script>
+
+    <!-- map2 -->
+    <script src="part2/Initialize.js"></script>
+    <script src="part2/main_map.js"></script>
+    <script src="part2/addDataSources.js"></script>
+    <script src="part2/wordcloud.js"></script>
+    <script src="part2/chart.js"></script>
+
+    <!-- map3 -->
+    <script src="part3/part3_script.js"></script>
+
+    <!-- ========== Footer 放这里 ========== -->
+    <footer class="site-footer">
+      <div class="container">
+        <div class="footer-content">
+          <div class="footer-section">
+            <h3>DATA SOURCE</h3>
+            <p>
+              <a href="https://www.crexpress.cn/en/#/home" target="_blank">
+                CR Express Official Website
+              </a>
+            </p>
+          </div>
+          <div class="footer-section">
+            <h3>CONTACT US</h3>
+            <p>Github</p>
+            <p>http://xxxxxxxx</p>
+          </div>
+        </div>
+        <div class="copyright">
+          <p>2025 Digital Viz CASA0003 Assessments Project: Group 14</p>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>
