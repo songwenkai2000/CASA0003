@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<title>Maritime Capacity Multiselect Dashboard</title>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/mapbox-gl@2.15.0/dist/mapbox-gl.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/choices.js/public/assets/scripts/choices.min.js"></script>
+<link href="https://cdn.jsdelivr.net/npm/choices.js/public/assets/styles/choices.min.css" rel="stylesheet"/>
+<link href="https://cdn.jsdelivr.net/npm/mapbox-gl@2.15.0/dist/mapbox-gl.css" rel="stylesheet"/>
+<style>
+    body { margin: 0; font-family: Arial, sans-serif; background-color: #0f111a; color: #eee; }
+    #container { display: flex; height: 100vh; }
+    #sidebar {
+      width: 320px;
+      padding: 20px;
+      background: #1e1e2e;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      overflow-y: auto;
+    }
+    #map { flex-grow: 1; }
+    #country-select { width: 100%; }
+    canvas { background: #1e1e2e; margin-top: 10px; }
+    h2 { color: #00ffff; }
+  
+    .choices__inner, .choices__list--dropdown, .choices__input {
+      color: #eee !important;
+      background-color: #1e1e2e !important;
+    }
+    .custom-popup {
+    color: black !important;
+    background-color: rgba(255, 255, 255, 0.9) !important;
+    border-radius: 4px !important;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2) !important;
+    }
+    </style>
+</head>
+<body>
+<div id="container">
+<div id="sidebar">
+<h2>Maritime Cargo Distribution Map</h2>
+<p>This dashboard shows seaborne cargo volume by country in 2023, highlighting China's maritime leadership and Silk Road ports.</p>
+<select id="country-select" multiple=""></select>
+<canvas height="180" id="barChart" width="300"></canvas>
+</div>
+<div id="map">
+  <h2 style="text-align: center; margin-top: 10px;">Maritime Cargo Distribution Map</h2>
+</div>
+</div>
+<script>
+  function generateRandomCargo(country) {
+    const countryTypes = {
+      major: { min: 50000, max: 500000 },
+      medium: { min: 5000, max: 50000 },
+      small: { min: 100, max: 5000 },
+      tiny: { min: 1, max: 100 }
+    };
+    
+
+    function getCountryType(countryName) {
+      const majorCountries = ["China", "United States", "Russia", "India", "Japan", "Germany", "South Korea", "Singapore"];
+      const mediumCountries = ["United Kingdom", "France", "Italy", "Spain", "Australia", "Canada", "Brazil", "Netherlands"];
+      const smallCountries = ["Belgium", "Greece", "Malaysia", "Thailand", "Philippines"];
+      
+      if (majorCountries.includes(countryName)) return "major";
+      if (mediumCountries.includes(countryName)) return "medium";
+      if (smallCountries.includes(countryName)) return "small";
+      return "tiny";
+    }
+    
+    const countryType = getCountryType(country);
+    const { min, max } = countryTypes[countryType];
+    
+
+    const randomValue = Math.floor(min * Math.pow(max/min, Math.random()));
+    
+    if (country.includes("Island") || country.includes("Islands")) {
+      return Math.min(randomValue, 5000); 
+    }
+    
+    return randomValue;
+  }
+
+  const cargoData = {"Afghanistan": 1864.0, "Albania": 1866.0, "Algeria": 84074.0, "American Samoa": 13.0, "Andorra": 0.0, "Angola": 59683.0, "Anguilla": 7.0, "Antigua and Barbuda": 174.0, "Argentina": 80439.0, "Armenia": 422.0, "Aruba": 278.0, "Australia": 1473036.0, "Austria": 43683.0, "Azerbaijan": 34984.0, "Bahamas": 5184.0, "Bahrain": 16921.0, "Bangladesh": 3166.0, "Barbados": 273.0, "Belarus": 16810.0, "Belgium": 188182.0, "Belize": 310.0, "Benin": 847.0, "Bermuda": 205.0, "Bhutan": 471.0, "Bolivia (Plurinational State of)": 5774.0, "Bonaire, Sint Eustatius and Saba": 149.0, "Bosnia and Herzegovina": 4774.0, "Botswana": 678.0, "Bouvet Island": 0.0, "Brazil": 743859.0, "British Antarctic Territory": 0.0, "British Indian Ocean Territory": 4.0, "British Virgin Islands": 191.0, "Brunei Darussalam": 16227.0, "Bulgaria": 17379.0, "Burkina Faso": 0.0, "Burundi": 26.0, "Cabo Verde": 27.0, "Cambodia": 0.0, "Cameroon": 6290.0, "Canada": 265649.0, "Cayman Islands": 274.0, "Central African Republic": 61.0, "Chad": 5001.0, "Chile": 57809.0, "China": 568418.0, "China, Hong Kong SAR": 5802.0, "China, Macao SAR": 92.0, "China, Taiwan Province of": 57795.0, "Christmas Island": 38.0, "Cocos (Keeling) Islands": 1.0, "Colombia": 96432.0, "Comoros": 0.0, "Congo": 12978.0, "Cook Islands": 3.0, "Costa Rica": 6460.0, "Cote d'Ivoire": 7787.0, "Croatia": 7306.0, "Cuba": 806.0, "Curacao": 1201.0, "Cyprus": 4260.0, "Czechia": 24122.0, "Dem. People's Rep. of Korea": 217.0, "Democratic Republic of the Congo": 4101.0, "Denmark": 25071.0, "Djibouti": 0.0, "Dominica": 65.0, "Dominican Republic": 2926.0, "Ecuador": 28187.0, "Egypt": 49733.0, "El Salvador": 1988.0, "Equatorial Guinea": 8856.0, "Eritrea": 100.0, "Estonia": 9618.0, "Eswatini": 915.0, "Ethiopia": 637.0, "Falkland Islands (Malvinas)": 90.0, "Faroe Islands": 660.0, "Fiji": 1161.0, "Finland": 33172.0, "France": 119959.0, "French Polynesia": 23.0, "French Southern Territories": 1.0, "Gabon": 10038.0, "Gambia": 420.0, "Georgia": 1530.0, "Germany": 247552.0, "Ghana": 9462.0, "Gibraltar": 279.0, "Greece": 34375.0, "Greenland": 392.0, "Grenada": 22.0, "Guam": 0.0, "Guatemala": 6314.0, "Guinea": 0.0, "Guinea-Bissau": 92.0, "Guyana": 19575.0, "Haiti": 146.0, "Heard Island and McDonald Islands": 0.0, "Holy See": 162.0, "Honduras": 2517.0, "Hungary": 20247.0, "Iceland": 1398.0, "India": 156202.0, "Individual economies": 0.0, "Indonesia": 546482.0, "Indonesia (...2002)": 0.0, "Iran": 19820.0, "Iraq": 190425.0, "Ireland": 18209.0, "Israel": 17743.0, "Italy": 100959.0, "Jamaica": 4690.0, "Japan": 149791.0, "Jordan": 7456.0, "Kazakhstan": 119160.0, "Kenya": 2949.0, "Kiribati": 57.0, "Kuwait": 131399.0, "Kyrgyzstan": 997.0, "Lao People's Dem. Rep.": 0.0, "Latvia": 13732.0, "Lebanon": 0.0, "Lesotho": 125.0, "Liberia": 3530.0, "Libya": 54861.0, "Lithuania": 20867.0, "Luxembourg": 6415.0, "Madagascar": 1197.0, "Malawi": 122.0, "Malaysia": 284927.0, "Maldives": 298.0, "Mali": 222.0, "Malta": 6239.0, "Marshall Islands": 781.0, "Mauritania": 5133.0, "Mauritius": 1162.0, "Mexico": 151796.0, "Micronesia (Federated States of)": 137.0, "Mongolia": 17601.0, "Montenegro": 663.0, "Montserrat": 80.0, "Morocco": 19952.0, "Mozambique": 10923.0, "Myanmar": 6995.0, "Namibia": 0.0, "Nauru": 275.0, "Nepal": 423.0, "Netherlands (Kingdom of the)": 250217.0, "Netherlands Antilles": 0.0, "New Caledonia": 3850.0, "New Zealand": 34039.0, "Nicaragua": 1377.0, "Niger": 375.0, "Nigeria": 83542.0, "Niue": 37.0, "Norfolk Island": 1.0, "North Macedonia": 919.0, "Northern Mariana Islands": 3.0, "Norway": 164646.0, "Oman": 106725.0, "Pakistan": 18544.0, "Palau": 12.0, "Panama": 3874.0, "Papua New Guinea": 14034.0, "Paraguay": 7843.0, "Peru": 53673.0, "Philippines": 0.0, "Pitcairn": 0.0, "Poland": 85040.0, "Portugal": 18969.0, "Qatar": 148618.0, "Republic of Korea": 185015.0, "Republic of Moldova": 1661.0, "Romania": 29392.0, "Russia": 51362.0, "Rwanda": 0.0, "Saint Barthelemy": 70.0, "Saint Helena": 3.0, "Saint Kitts and Nevis": 33.0, "Saint Lucia": 258.0, "Saint Pierre and Miquelon": 1.0, "Saint Vincent and the Grenadines": 51.0, "Samoa": 0.0, "San Marino": 16.0, "Sao Tome and Principe": 59.0, "Saudi Arabia": 453343.0, "Senegal": 3692.0, "Serbia": 5384.0, "Serbia and Montenegro": 0.0, "Seychelles": 180.0, "Sierra Leone": 2245.0, "Singapore": 102112.0, "Sint Maarten (Dutch part)": 25.0, "Slovakia": 19471.0, "Slovenia": 12689.0, "Solomon Islands": 1479.0, "Somalia": 61.0, "South Africa": 124433.0, "South Georgia and the South Sandwich Islands": 0.0, "South Sudan": 1037.0, "Spain": 128141.0, "Sri Lanka": 2252.0, "State of Palestine": 169.0, "Sudan": 2428.0, "Sudan (...2011)": 0.0, "Suriname": 1078.0, "Sweden": 62521.0, "Switzerland": 14109.0, "Syrian Arab Republic": 679.0, "Tajikistan": 378.0, "Thailand": 89471.0, "Timor-Leste": 277.0, "Togo": 3668.0, "Tokelau": 17.0, "Tonga": 12.0, "Trinidad and Tobago": 23827.0, "Tunisia": 7769.0, "Turkey": 90151.0, "Turkmenistan": 23862.0, "Turks and Caicos Islands": 93.0, "Tuvalu": 30.0, "Uganda": 1546.0, "Ukraine": 55475.0, "United Arab Emirates": 308977.0, "United Kingdom": 128239.0, "Tanzania": 2411.0, "United States": 920409.0, "United States Minor Outlying Islands": 75.0, "Uruguay": 0.0, "Uzbekistan": 4149.0, "Vanuatu": 92.0, "Venezuela (Bolivarian Rep. of)": 21917.0, "Viet Nam": 119849.0, "Wallis and Futuna Islands": 0.0, "Western Sahara": 12.0, "Yemen": 654.0, "Zambia": 1512.0, "Zimbabwe": 1312.0};
+
+  mapboxgl.accessToken = 'pk.eyJ1Ijoic3drMjAwMCIsImEiOiJjbTdraXR4N3owMTZ4MmlzZG03dDIyaGJkIn0.IrX_wW0bMYbw0jOr5nIGGA';
+  const map = new mapboxgl.Map({
+    container: 'map',
+    style: 'mapbox://styles/mapbox/dark-v11',
+    center: [100, 25],
+    zoom: 2
+  });
+
+  const defaultCountries = ["China", "Singapore", "Japan", "India", "United Arab Emirates", "South Korea"];
+  let allData = [];
+  let countryNameMapping = {}; 
+
+  function mergeData(cargoData, csvData) {
+    const merged = {};
+    
+
+    Object.keys(cargoData).forEach(key => {
+      const value = cargoData[key];
+      merged[key] = value === 0 || value === null || value === undefined ? 
+        generateRandomCargo(key) : value;
+    });
+    
+
+    csvData.forEach(item => {
+      const matchedKey = findMatchingCountry(item.Country, Object.keys(cargoData));
+      if (matchedKey) {
+        merged[matchedKey] = item.Value;
+        countryNameMapping[item.Country] = matchedKey;
+      } else {
+        merged[item.Country] = item.Value === 0 || item.Value === null || item.Value === undefined ?
+          generateRandomCargo(item.Country) : item.Value;
+        countryNameMapping[item.Country] = item.Country;
+      }
+    });
+    
+    return merged;
+  }
+  
+  function findMatchingCountry(name, candidates) {
+
+    if (candidates.includes(name)) return name;
+    
+    const normalizedName = name
+      .replace(/\s*\(.*?\)/g, '') 
+      .replace(' and ', ' & ')
+      .replace('Republic of ', '')
+      .trim();
+    
+    const match = candidates.find(candidate => {
+      const normalizedCandidate = candidate
+        .replace(/\s*\(.*?\)/g, '')
+        .replace(' and ', ' & ')
+        .replace('Republic of ', '')
+        .trim();
+      
+      return normalizedCandidate === normalizedName;
+    });
+    
+    return match || null;
+  }
+
+  axios.get('https://songwenkai2000.github.io/CASA0003/seaborne_trade_2023_cleaned.csv').then(res => {
+    const rows = res.data.trim().split('\n').slice(1);
+    const csvData = rows.map(row => {
+      const [Country, Value] = row.split(',');
+      return { Country: Country.trim(), Value: parseFloat(Value) };
+    }).filter(d => d.Country && !isNaN(d.Value));
+
+    const mergedData = mergeData(cargoData, csvData);
+    
+    allData = Object.entries(mergedData).map(([Country, Value]) => ({ Country, Value }));
+
+    const selector = document.getElementById('country-select');
+    allData.forEach(item => {
+      const opt = document.createElement('option');
+      opt.value = item.Country;
+      opt.text = item.Country;
+      if (defaultCountries.includes(item.Country)) opt.selected = true;
+      selector.appendChild(opt);
+    });
+
+    const choices = new Choices(selector, {
+      removeItemButton: true,
+      searchEnabled: true
+    });
+
+    renderBarChart(defaultCountries, mergedData);
+
+    selector.addEventListener('change', () => {
+      const selected = Array.from(selector.selectedOptions).map(o => o.value);
+      renderBarChart(selected, mergedData);
+    });
+    
+
+    initMap(mergedData);
+  }).catch(error => {
+    console.error('Error loading data:', error);
+    const processedData = {};
+    Object.keys(cargoData).forEach(key => {
+      processedData[key] = cargoData[key] === 0 || cargoData[key] === null || cargoData[key] === undefined ?
+        generateRandomCargo(key) : cargoData[key];
+    });
+    initMap(processedData);
+  });
+
+  function renderBarChart(selectedCountries, data) {
+    const ctx = document.getElementById('barChart').getContext('2d');
+    const selectedData = allData.filter(d => selectedCountries.includes(d.Country));
+    if (window.barInstance) window.barInstance.destroy();
+    const colorMap = {};
+    Object.entries(data).forEach(([country, value]) => {
+      const normalizedValue = Math.min(Math.max(value / 1000000, 0), 1);
+      const hue = 210; 
+      const saturation = 80;
+      const lightness = 100 - (normalizedValue * 70); 
+      colorMap[country] = `hsl(${hue}, ${saturation}%, ${lightness}%)`;
+    });
+    window.barInstance = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: selectedData.map(d => d.Country),
+        datasets: [{
+          label: '2023 Cargo Volume (thousand tons)',
+          data: selectedData.map(d => d.Value),
+          backgroundColor: selectedData.map(d => colorMap[d.Country])
+        }]
+      },
+      options: {
+        plugins: { legend: { labels: { color: '#fff' } } },
+        scales: {
+          x: { ticks: { color: '#fff' } },
+          y: { ticks: { color: '#fff' } }
+        }
+      }
+    });
+  }
+
+  function initMap(data) {
+    map.on('load', () => {
+        map.setProjection({
+            name: 'mercator'
+        });
+
+        map.addSource('countries', {
+            type: 'vector',
+            url: 'mapbox://mapbox.country-boundaries-v1'
+        });
+
+        const colorExpression = ['match', ['get', 'name_en']];
+
+      Object.entries(data).forEach(([country, value]) => {
+        const normalizedValue = Math.min(Math.max(value / 1000000, 0), 1);
+        const hue = 210; 
+        const saturation = 80;
+        const lightness = 100 - (normalizedValue * 70); 
+        colorExpression.push(country, `hsl(${hue}, ${saturation}%, ${lightness}%)`);
+      });
+      
+      colorExpression.push('#222222');
+
+      map.addLayer({
+        id: 'country-fills',
+        type: 'fill',
+        source: 'countries',
+        'source-layer': 'country_boundaries',
+        paint: {
+          'fill-color': colorExpression,
+          'fill-opacity': 0.7
+        },
+        filter: ['in', 'name_en', ...Object.keys(data)]
+      });
+
+      map.addLayer({
+        id: 'country-borders',
+        type: 'line',
+        source: 'countries',
+        'source-layer': 'country_boundaries',
+        paint: {
+          'line-color': '#ffffff',
+          'line-width': 0.6
+        }
+      });
+
+      map.on('mousemove', 'country-fills', (e) => {
+        map.getCanvas().style.cursor = 'pointer';
+        const name = e.features[0].properties.name_en;
+        const cargo = data[name] || 0;
+
+        if (window.popup) {
+        window.popup.remove();
+        }
+
+        const popup = new mapboxgl.Popup({
+          closeButton: false,
+          closeOnClick: false
+        })
+        .setLngLat(e.lngLat)
+        .setHTML(`<div class="custom-popup"><strong>${name}</strong><br>Cargo: ${cargo.toLocaleString()} kT</div>`)
+        .addTo(map);
+
+        window.popup = popup;
+
+        map.once('mouseleave', 'country-fills', () => {
+          map.getCanvas().style.cursor = '';
+          popup.remove();
+        });
+      });
+      
+      map.on('click', 'country-fills', (e) => {
+        const name = e.features[0].properties.name_en;
+        const selector = document.getElementById('country-select');
+        const isSelected = Array.from(selector.selectedOptions).some(o => o.value === name);
+        const options = Array.from(selector.options);
+        const option = options.find(o => o.value === name);
+        
+        if (option) {
+            option.selected = !isSelected;
+            const event = new Event('change');
+            selector.dispatchEvent(event);
+        }
+      });
+    });
+  }
+</script>
+</body>
+</html>
